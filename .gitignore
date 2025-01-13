@@ -1,0 +1,27 @@
+*.class
+*.log
+
+.bsp
+.metals
+.vscode
+.scala-build
+.env
+.envrc
+*.http
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+log.txt
+test.json
+
+out/*
+.bloop
+.jvmopts
+.DS_STORE
+
+assistant.txt
+easychat.txt
+thread.txt
+easychat.txt
+vectorStore.txt
+messages.txt
+*.scala.semanticdb
