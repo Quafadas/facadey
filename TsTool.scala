@@ -1,6 +1,6 @@
 import java.net.InetSocketAddress
 import java.nio.file.Path
-
+import scala.compiletime.uninitialized
 import scala.annotation.experimental
 
 import org.http4s.ember.client.EmberClientBuilder
@@ -17,6 +17,16 @@ import cats.syntax.option.catsSyntaxOptionId
 import fs2.*
 import fs2.io.process.ProcessBuilder
 import smithy4s.deriving.{*, given}
+import com.microsoft.playwright.Playwright
+import com.microsoft.playwright.Browser
+import com.microsoft.playwright.BrowserType
+
+object FilthyCacheConcept:
+  lazy val pw: Playwright = Playwright.create()
+  lazy val browserOpts = BrowserType.LaunchOptions()
+  lazy val browser = pw.webkit.launch(browserOpts)
+
+end FilthyCacheConcept
 
 @hints(
   smithy.api.Documentation(
@@ -24,6 +34,7 @@ import smithy4s.deriving.{*, given}
   )
 )
 trait TsCode derives API:
+  private val fcc = FilthyCacheConcept
 
   /** Creates a temporary directory on the local file system.
     */
@@ -69,6 +80,13 @@ trait TsCode derives API:
         IO.println(s"Installing typescript module type declarations for $forModule in $projectPath")
       }
       .map(_ => s"Installed typescript module type declarations for $forModule in $projectPath")
+
+  @hints(
+    smithy.api.Documentation(
+      "Takes a screencap of localhost:port and returns it as an image"
+    )
+  )
+  def playwrightTakeImage(port: Int, outPath: String): IO[String] = ???
 
   /** start a local webserver in a given directory
     */

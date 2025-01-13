@@ -23,7 +23,7 @@ lazy val tsImpl = new TsCode {}
 @experimental
 object Facade extends IOApp.Simple:
 
-  lazy val logFile = fs2.io.file.Path("log.txt")
+  lazy val logFile = fs2.io.file.Path("ai.log")
   lazy val chatGpt = ChatGpt.defaultAuthLogToFile(logFile)
 
   lazy val tsImpl = new TsCode() {}
@@ -37,7 +37,7 @@ object Facade extends IOApp.Simple:
 
     val startMessages = List(
       AiMessage.system(
-        """|You are a typescript expert. You are given the ability to read and write files, and start a server in a given directory."""
+        """|You are a typescript expert with a background in three.js. You write code, and use the provided tools to save, compile, serve it and image the outcome."""
       ),
       AiMessage.user(
         """|Create a temporary directoryy.
@@ -49,7 +49,7 @@ object Facade extends IOApp.Simple:
           |Create an index.html file which references the compiled .ts file (i.e. has a .js extension) ready to be served.
           |
           | Once the code is written, the "serveTsDir" function will invoke tsc and serve the result.
-          | Call the tool to check with your human, that the output is as expected. If successul invoke playwright to take a screenshot of the result, which will be sent to you.
+          | Call the tool to check with your human, that the output is as expected. If successull invoke playwright to take a screenshot of the result, which will be sent to you.
           | This is your reference picture.
           |
           |
