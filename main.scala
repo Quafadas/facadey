@@ -46,7 +46,7 @@ object Facade extends IOApp.Simple:
           |
           |Install the type declartions in that directory for three.js using the installTypescriptModuleTypDeclarations tool provided.
           |
-          |Create a .ts file in the temp directory, containg a program to show a simple stickman shape in three JS.
+          |Create a .ts file in the temp directory, containing a program to show a simple stickman shape in three JS.
           |
           |Compile the temp directory, using the compileTsDir tool provided.
           |
