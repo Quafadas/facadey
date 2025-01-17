@@ -18,8 +18,6 @@ import fs2.*
 import fs2.io.process.ProcessBuilder
 import smithy4s.deriving.{*, given}
 
-lazy val tsImpl = new TsCode {}
-
 @experimental
 object Facade extends IOApp.Simple:
 
