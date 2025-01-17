@@ -41,6 +41,10 @@ I honestly don't know. It satisfied my curiosity, I don't know how it would hold
 
 YMMV.
 
+## Is it reliable?
+
+The process does seem to work, but some (non-trivial) percentage of the time, the AI seems to struggle getting the typescript right. Once it get the typescript right, quite often it seems to be able to follow it through in scalaJS.
+
 ## Cost
 
 I spent 1.29 USD (1 dollar) on openAI's API on hamster wheel of getting this to work.
