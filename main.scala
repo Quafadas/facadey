@@ -79,7 +79,7 @@ object Facade extends IOApp.Simple:
           |Finally, call the "serveDir" function for the scala temporary directory on port 3002. Check with the human to make sure the result is as expected and adjust the scala code as necessary.
           |
           |Once the scalaJS code displays the same picture as the typescript code, you are finished. Provide a nicely formatted message which tells the user the location of
-          |bot the typescript code, and scalaJS code.
+          |both the typescript code, and scalaJS code.
           |
           |Begin!
         """
