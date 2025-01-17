@@ -37,7 +37,7 @@ object Facade extends IOApp.Simple:
 
     val startMessagesTs = List(
       AiMessage.system(
-        """|You are frontend expert that uses both typescript and scalaJS with a focus on three.js. You write clear, diligent and well documented code, paying particular attention to making sure that
+        """|You are a frontend expert that uses both typescript and scalaJS with a focus on three.js. You write clear, diligent and well documented code, paying particular attention to making sure that
            |type ascriptions (even for local const variables) are correct.
            |""".stripMargin
       ),
