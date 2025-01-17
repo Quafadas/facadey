@@ -20,13 +20,15 @@ import smithy4s.deriving.{*, given}
 import com.microsoft.playwright.Playwright
 import com.microsoft.playwright.Browser
 import com.microsoft.playwright.BrowserType
+import scala.util.chaining.*
+import smithy4s.Blob
 
-object FilthyCacheConcept:
-  lazy val pw: Playwright = Playwright.create()
-  lazy val browserOpts = BrowserType.LaunchOptions()
-  lazy val browser = pw.webkit.launch(browserOpts)
+// object FilthyCacheConcept:
+//   lazy val pw: Playwright = Playwright.create()
+//   lazy val browserOpts = BrowserType.LaunchOptions().tap(_.headless = false)
+//   lazy val browser = pw.webkit.launch(browserOpts)
 
-end FilthyCacheConcept
+// end FilthyCacheConcept
 
 @hints(
   smithy.api.Documentation(
@@ -34,7 +36,7 @@ end FilthyCacheConcept
   )
 )
 trait TsCode derives API:
-  private val fcc = FilthyCacheConcept
+  // private val fcc = FilthyCacheConcept
 
   /** Creates a temporary directory on the local file system.
     */
@@ -46,7 +48,7 @@ trait TsCode derives API:
       }
 
   def createOrOverwriteFileInDir(dir: String, fileName: String, contents: Option[String]): IO[String] =
-    IO.println(s"Creating a file in $dir called $fileName") >>
+    IO.println(s"Creating $dir/$fileName file in $dir called $fileName") >>
       IO.blocking {
         val filePath = os.Path(dir) / fileName
         os.write.over(filePath, contents.getOrElse(""))
@@ -72,26 +74,31 @@ trait TsCode derives API:
 
   def installTypescriptModuleTypDeclarations(projectPath: String, forModule: String): IO[String] =
     ProcessBuilder("npm", List("install", "--save-dev", s"@types/$forModule"))
+      .withWorkingDirectory(fs2.io.file.Path(projectPath))
       .spawn[IO]
       .map { proc =>
         proc.stdout.through(fs2.text.utf8.decode).evalTap(IO.println(_)).compile.drain
       }
-      .use { _ =>
-        IO.println(s"Installing typescript module type declarations for $forModule in $projectPath")
+      .use { proc =>
+        proc >>
+          IO.println(s"Installing typescript module type declarations for $forModule in $projectPath")
       }
       .map(_ => s"Installed typescript module type declarations for $forModule in $projectPath")
 
-  @hints(
-    smithy.api.Documentation(
-      "Takes a screencap of localhost:port and returns it as an image"
-    )
-  )
-  def playwrightTakeImage(port: Int, outPath: String): IO[String] = ???
+  // @hints(
+  //   smithy.api.Documentation(
+  //     "Takes a screencap of localhost:port and returns it as an image"
+  //   )
+  // )
+  // def playwrightTakeImage(port: Int, outPath: String): IO[Blob] = IO {
+  //   val page = fcc.browser.newPage().tap(_.navigate(s"http://localhost:$port"))
+  //   val bytes = page.screenshot()
+  //   Blob(bytes)
+  // }
+  // end playwrightTakeImage
 
-  /** start a local webserver in a given directory
-    */
-  def serveTsDir(dir: String, port: Int): IO[String] =
-    println(s"called serveTsDir with $dir on $port")
+  def compileTsDir(dir: String): IO[String] =
+
     val asPath = fs2.io.file.Path(dir)
 
     val listTsFiles = fs2.io.file
@@ -110,23 +117,74 @@ trait TsCode derives API:
           .spawn[IO]
       }
 
-    val runtsc = proc.use { p =>
-      println("tsc output")
-      p.stdout.through(fs2.text.utf8.decode).evalTap(IO.println(_)).compile.drain
-    }
+    IO.println(s"compile typescript $dir ") >>
+      proc.use { p =>
+        p.stdout.through(fs2.text.utf8.decode).evalTap(IO.println(_)).compile.string
+      }
+
+  end compileTsDir
+
+  /** start a local webserver in a given directory
+    */
+  def serveDir(dir: String, port: Int): IO[String] =
 
     val serveIo = IO(
       SimpleFileServer
         .createFileServer(
           new InetSocketAddress(port),
           Path.of(dir),
-          com.sun.net.httpserver.SimpleFileServer.OutputLevel.VERBOSE
+          com.sun.net.httpserver.SimpleFileServer.OutputLevel.INFO
         )
         .start()
     )
 
-    runtsc.flatMap(_ => serveIo.map(_ => "Server started"))
+    val openBrowser = IO.blocking {
+      val desktop = java.awt.Desktop.getDesktop
+      val uri = new java.net.URI(s"http://localhost:$port")
+      desktop.browse(uri)
+    }
 
-  end serveTsDir
+    for
+      _ <- serveIo
+      _ <- openBrowser
+      _ <- IO.println(s"Serving directory $dir")
+    yield s"Server started on http://localhost:$port"
+    end for
+
+  end serveDir
+
+  /** Use scala-cli to compile and link the code in a given directory
+    */
+  def compileAndLinkScalaJs(dir: String): IO[String] =
+    val asPath = fs2.io.file.Path(dir)
+    val scalaCliArgs = List(
+      "--power",
+      "package",
+      "--js",
+      "-f",
+      "."
+    )
+    IO.println(s"compiling directory $dir with scala-cli ") >>
+      ProcessBuilder(
+        "scala-cli",
+        scalaCliArgs
+      ).withWorkingDirectory(asPath)
+        .spawn[IO]
+        .use { p =>
+          val stdout = p.stdout
+            .through(text.utf8.decode)
+            .compile
+            .string
+
+          val stdError = p.stderr
+            .through(text.utf8.decode)
+            .compile
+            .string
+
+          stdout.both(stdError).map { (out, err) =>
+            s"stdout: $out\nstderr: $err"
+          }
+        }
+  end compileAndLinkScalaJs
 
 end TsCode

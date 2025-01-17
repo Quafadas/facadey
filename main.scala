@@ -35,31 +35,61 @@ object Facade extends IOApp.Simple:
 
   override def run: IO[Unit] =
 
-    val startMessages = List(
+    val startMessagesTs = List(
       AiMessage.system(
-        """|You are a typescript expert with a background in three.js. You write code, and use the provided tools to save, compile, serve it and image the outcome."""
+        """|You are frontend expert that uses both typescript and scalaJS with a focus on three.js. You write clear, diligent and well documented code, paying particular attention to making sure that
+           |type ascriptions (even for local const variables) are correct.
+           |""".stripMargin
       ),
       AiMessage.user(
-        """|Create a temporary directoryy.
-          |Create a .ts file in that directory, containg a program to demonstrate the basics of three JS. Import three.js as an ESM module using the following import.
-          |https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js
+        """|Create a temporary directory.
           |
-          |Install the type declartions usiung the tool provided.
+          |Install the type declartions in that directory for three.js using the installTypescriptModuleTypDeclarations tool provided.
           |
-          |Create an index.html file which references the compiled .ts file (i.e. has a .js extension) ready to be served.
+          |Create a .ts file in the temp directory, containg a program to show a simple stickman shape in three JS.
           |
-          | Once the code is written, the "serveTsDir" function will invoke tsc and serve the result.
-          | Call the tool to check with your human, that the output is as expected. If successull invoke playwright to take a screenshot of the result, which will be sent to you.
-          | This is your reference picture.
+          |Compile the temp directory, using the compileTsDir tool provided.
           |
+          |If successful create an index.html file which references the compiled .ts file (i.e. has a .js extension) ready to be served. As part of the index.html file, include
+          |an ESModule map which maps `three` to https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js, i.e. resolves it from a CDN
           |
+          |Once the code is compiled sucessfuly, call the "serveDir" function to serve the result on port 3001.
+          |Call the tool to check with your human, that the output is as expected, if it is not, continue with the following loop taking into account human feedback;
+          |
+          |1. Rewrite the typesript file in the temp directory.
+          |2. Compile the temp directory.
+          |3. Ask the human if the output is correct (the server doesn't need to be restarted)
+          |
+          |Our goal, is to rewrite this code in scalaJS. To do this, firstly, create a new temporary directory.
+          |Rewrite the code from typescript above, to scala JS (including a facadde for the part of three.js we used). The first lines of the scala file, should contains the following
+          |```
+          |//> using scala 3.6.2
+          |//> using platform js
+          |//> using dep org.scala-js::scalajs-dom::2.8.0
+          |//> using jsModuleKind es
+          |```
+          |Your three JS facade, will begin with the following;
+          |@JSImport(
+          | "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js",
+          | JSImport.Namespace
+          |)
+          |Which will resolve the dependancy from CDN when served in browser.
+          |Call the "compileAndLinkScalaJs" function to compile the code, continually iterating on your solution until it is successful.
+          |
+          |Next, write an index.html file into the temp directory, which references the compiled scala.js file.
+          |
+          |Finally, call the "serveDir" function for the scala temporary directory on port 3002. Check with the human to make sure the result is as expected and adjust the scala code as necessary.
+          |
+          |Once the scalaJS code displays the same picture as the typescript code, you are finished.
+          |
+          |Begin!
         """
       )
     )
 
     chatGpt
       .use { bot =>
-        Agent.startAgent(bot, startMessages, params, API[TsCode].liftService(tsImpl))
+        Agent.startAgent(bot, startMessagesTs, params, API[TsCode].liftService(tsImpl))
       }
       .flatTap { msgs =>
         IO.println("finished") >>
